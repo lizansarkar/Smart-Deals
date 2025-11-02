@@ -23,16 +23,38 @@ const run = async () => {
   try {
     await client.connect();
 
-    app.post("/", (req, res) => {
-      res.send("my smart server is running...");
+    app.get("/", (req, res) => {
+      res.send("my smart server is running......");
     });
+
     const db = client.db("smart-db");
     const productsCollection = db.collection("products");
+    const bidsCollection = db.collection("bids");
+    const userCollection = db.collection("users");
 
-    const bidsCollection = db.collection('bids')
+    app.post("/users", async (req, res) => {
+      const newUser = req.body;
+
+      const email = req.body.email;
+      const query = { email: email };
+      const existingUser = await userCollection.findOne(query);
+      if (existingUser) {
+        res.send({message: "user already exist do not try again this procces"});
+      } else {
+        const result = await userCollection.insertOne(newUser);
+        res.send(result);
+      }
+    });
 
     app.get("/products", async (req, res) => {
-      const projectFields = {title: 1, image: 1, price_min: 1, price_max:1, email: 1, seller_contact: 1}
+      const projectFields = {
+        title: 1,
+        image: 1,
+        price_min: 1,
+        price_max: 1,
+        email: 1,
+        seller_contact: 1,
+      };
       const cursor = productsCollection
         .find()
         .sort({ price_min: 1 })
@@ -82,25 +104,23 @@ const run = async () => {
       res.send(result);
     });
 
-
     // bid realeted apis
-    app.get('/bids', async(req, res) => {
+    app.get("/bids", async (req, res) => {
       const email = req.query.email;
-      const query = {}
-      if(email) {
-        query.email = email
+      const query = {};
+      if (email) {
+        query.email = email;
       }
       const cursor = bidsCollection.find();
       const result = await cursor.toArray();
       res.send(result);
-    })
-
+    });
 
     app.post("/bids", async (req, res) => {
       const newBid = req.body;
-      const result = await bidsCollection.insertOne(newBid)
-      res.send(result)
-    })
+      const result = await bidsCollection.insertOne(newBid);
+      res.send(result);
+    });
 
     await client.db("admin").command({ ping: 1 });
     console.log(
