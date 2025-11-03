@@ -122,6 +122,16 @@ const run = async () => {
       res.send(result);
     });
 
+    
+    app.get("/products/bids/:id", async (req, res) => {
+      const productId = req.params.id;
+      console.log(productId)
+      const query = {product: productId}
+      const cursor = bidsCollection.find(query).sort({bid_price: -1})
+      const result = await cursor.toArray();
+      res.send(result)
+    })
+
     app.post("/bids", async (req, res) => {
       const newBid = req.body;
       const result = await bidsCollection.insertOne(newBid);
